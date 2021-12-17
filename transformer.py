@@ -40,7 +40,8 @@ class MultiHeadAttention(torch.nn.Module):
         # matmul does matrix multiplication for the last 2 dimensions in a for loop for the first dimensions
         scores = torch.matmul(Q, K.transpose(2,3)) # (bs, num_heads, query_length, key_length)
 
-        A = Softargmax(dim=-1)(scores) # (bs, num_heads, query_length, key_length)
+        A = torch.nn.Sigmoid()(scores)
+        #A = Softargmax(dim=-1)(scores) # (bs, num_heads, query_length, key_length)
 
         H = torch.matmul(A, V) # (bs, num_heads, num_quries, query_dim)
 
@@ -235,8 +236,6 @@ def train(model, optimizer, loss_fn, train_loader, num_epochs):
             if batch_idx % 100 == 0:
                 print("Train itr:", train_idx, "Batch:", batch_idx, "loss:", losses/num_batches, "accuracy:", train_acc/num_batches)
 
-            return
-
         # TODO:?
         print("Train itr:", train_idx, "loss:", losses/num_batches, "accuracy:", train_acc/num_batches)
 
@@ -272,12 +271,14 @@ def transformer_run(train_loader):
     print("train_loader iter:",
         "Text:", train_example.text.shape, train_example.text[0][:5], "...",
         "Label:", train_example.label.shape, train_example.label[0])
-    model = TransformerClassifier(num_layers=1, dim_model=32, num_heads=2,
+    # 1 head, sigmoid, 10 epochs loss:0.1091 accuracy:0.9658
+    # 2 heads, softargmax, 10 epochs loss:0.1608 accuracy:0.9455
+    model = TransformerClassifier(num_layers=1, dim_model=32, num_heads=1,
         conv_hidden_dim=128, input_vocab_size=50_002, num_answers=2).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=0.001)
 
     train(model, optimizer, loss_fn=torch.nn.functional.cross_entropy, train_loader=train_loader,
-        num_epochs=3)
+        num_epochs=10)
 
 def transformer_main():
     train_loader, = startup()
