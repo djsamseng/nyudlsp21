@@ -76,6 +76,11 @@ class MultiHeadAttention(torch.nn.Module):
         # to be able to focus on multiple parts of the sequence
         # A better way to do this might be to have 1 head and replace the softargmax
         # with just a sigmoid
+        # Multihead meaning: seperate sections of the word embedding (each head) can learn
+        # different aspects of the meanings of each word as it relates to other words
+        # in the sequence. 1 head with a sigmoid should also be able to capture this
+        # however it will have more flexibility to make everything important rather
+        # than a fixed number of heads
         Q = self.split_heads(Q, batch_size) # (bs, num_heads, seq_length, dim_per_head)
         K = self.split_heads(K, batch_size)
         V = self.split_heads(V, batch_size)
@@ -273,6 +278,7 @@ def transformer_run(train_loader):
         "Label:", train_example.label.shape, train_example.label[0])
     # 1 head, sigmoid, 10 epochs loss:0.1091 accuracy:0.9658
     # 2 heads, softargmax, 10 epochs loss:0.1608 accuracy:0.9455
+    # 1 head, softargmax, 10 epochs loss:0.1444 accuracy:0.9506
     model = TransformerClassifier(num_layers=1, dim_model=32, num_heads=1,
         conv_hidden_dim=128, input_vocab_size=50_002, num_answers=2).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=0.001)
