@@ -61,20 +61,32 @@ class STDPCalc():
     def _calc(self):
         pass
 
+def test_einsum():
+    a = torch.tensor([
+        [1, 2, 3],
+        [4, 4, 4]
+    ])
+    a_hat = torch.zeros_like(a)
+    a_hat[0] = a[0].sum() * a[0]
+    a_hat[1] = a[1].sum() * a[1]
+
+    a_op = torch.einsum("ib,ij->ij", a, a)
+    torch.testing.assert_allclose(a_op, a_hat)
+
 def test_stdp():
     dt=0.001
     n_batches = 4
     n_pre = 1
-    n_post = 1
+    n_post = 2
     W = torch.ones(size=(n_post, n_pre)) * 0.1
     state = STDPState(
         t_pre=torch.zeros(size=(n_batches, n_pre)),
         t_post=torch.zeros(size=(n_batches, n_post))
     )
-    z_pre = torch.zeros((n_batches, 1, 1))
+    z_pre = torch.zeros((n_batches, 1, n_pre))
     z_pre[1,0,0] = 1
     z_pre[2,0,0] = 1
-    z_post = torch.zeros((n_batches, 1, 1))
+    z_post = torch.zeros((n_batches, 1, n_post))
     z_post[1,0,0] = 1
 
     p = STDPParameters(
@@ -125,6 +137,7 @@ def run_loop():
         print(out, lif_calc.state.v, lif_calc.state.i)
 
 def main():
+    test_einsum()
     test_stdp()
 
 if __name__ == "__main__":
