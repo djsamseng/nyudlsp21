@@ -65,8 +65,10 @@ class MultiHeadAttention(torch.nn.Module):
 
     def forward(self, X_q, X_k, X_v):
         # X_q (bs, seq_length, dim_model=embedding size)
+        print("SHAPE:", X_q.shape)
         batch_size, seq_length, dim = X_q.size()
         Q = self.W_query(X_q) # (bs, num_heads, seq_length, dim_model)
+        print("Q:", Q.shape)
         K = self.W_key(X_k)
         V = self.W_value(X_v)
         # Above we fed out entire word embedding into a fc layer
@@ -86,6 +88,7 @@ class MultiHeadAttention(torch.nn.Module):
         V = self.split_heads(V, batch_size)
 
         # Calculate attention for each head
+        print("DOT:", Q.shape)
         H_cat, A = self.scaled_dot_product_attention(Q, K, V)
         # H_cat (bs, num_heads, seq_length, dim_model/num_heads)
         # A (bs, num_heads, seq_length, seq_length)
@@ -240,7 +243,7 @@ def train(model, optimizer, loss_fn, train_loader, num_epochs):
 
             if batch_idx % 100 == 0:
                 print("Train itr:", train_idx, "Batch:", batch_idx, "loss:", losses/num_batches, "accuracy:", train_acc/num_batches)
-
+                return
         # TODO:?
         print("Train itr:", train_idx, "loss:", losses/num_batches, "accuracy:", train_acc/num_batches)
 
